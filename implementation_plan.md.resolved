@@ -1,0 +1,231 @@
+# Inventory Management System — Implementation Plan
+
+Full-stack inventory management dashboard with **Next.js** (frontend), **NestJS** (backend), and **SQLite** (local `database.sqlite`).
+
+## Project Structure
+
+```
+e:\allen-task2\
+├── backend/          # NestJS API
+│   ├── src/
+│   │   ├── auth/     # Login & Signup
+│   │   ├── products/ # Products CRUD
+│   │   ├── customers/# Customers CRUD
+│   │   ├── orders/   # Orders CRUD
+│   │   ├── seed/     # Database seeder
+│   │   └── entities/ # TypeORM entities
+│   └── ...
+├── frontend/         # Next.js App
+│   ├── app/
+│   │   ├── login/    # Login/Signup page
+│   │   ├── dashboard/# Main dashboard
+│   │   ├── products/ # Products management
+│   │   ├── customers/# Customers management
+│   │   └── orders/   # Orders management
+│   └── ...
+```
+
+---
+
+## Database Schema (SQLite — TypeORM)
+
+Database file: `backend/database.sqlite` (auto-created on first run via TypeORM `synchronize: true`).
+
+### Tables
+
+| Table | Columns |
+|-------|---------|
+| **users** | `id` (PK, auto), `name`, `email` (unique), `password`, `role` (default: 'admin'), `createdAt` |
+| **products** | `id` (PK, auto), `name`, `sku` (unique), `category`, `price`, `quantity`, `description`, `createdAt`, `updatedAt` |
+| **customers** | `id` (PK, auto), `name`, `email` (unique), `phone`, `address`, `city`, `createdAt` |
+| **orders** | `id` (PK, auto), `orderNumber` (unique), `customerId` (FK → customers), `productId` (FK → products), `quantity`, `totalPrice`, `status` (pending/completed/cancelled), `createdAt` |
+
+### Seed Data
+- **5 users** (admin accounts)
+- **15 products** (electronics, clothing, accessories)
+- **10 customers** 
+- **20 orders** (linked to customers & products)
+
+---
+
+## Backend — NestJS API
+
+### Modules & Endpoints
+
+#### Auth Module (`/api/auth`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/signup` | Register new user (name, email, password) |
+| POST | `/login` | Login (email, password) — returns user object, no JWT |
+
+#### Products Module (`/api/products`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | List all products (with search & pagination) |
+| GET | `/:id` | Get single product |
+| POST | `/` | Create product |
+| PATCH | `/:id` | Update product |
+| DELETE | `/:id` | Delete product |
+
+#### Customers Module (`/api/customers`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | List all customers (with search & pagination) |
+| GET | `/:id` | Get single customer |
+| POST | `/` | Create customer |
+| PATCH | `/:id` | Update customer |
+| DELETE | `/:id` | Delete customer |
+
+#### Orders Module (`/api/orders`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | List all orders (with relations, search & pagination) |
+| GET | `/:id` | Get single order |
+| POST | `/` | Create order |
+| PATCH | `/:id` | Update order |
+| DELETE | `/:id` | Delete order |
+
+#### Seed Module
+- `GET /api/seed` — Runs seeder to populate database with initial data
+
+---
+
+## Frontend — Next.js (App Router)
+
+### Design System
+- **Theme**: Dark professional dashboard (dark navy/slate background, neon blue accents, white text)
+- **Font**: Inter (Google Fonts)
+- **Cards**: Glassmorphism effect with subtle borders
+- **Animations**: Smooth transitions, hover effects, micro-animations on stats
+- **Fully responsive**: Mobile-first, sidebar collapses to hamburger menu
+
+### Pages
+
+#### 1. Login/Signup Page (`/login`)
+- Single page with **tab toggle** between Login & Signup
+- Clean centered card with glassmorphism
+- Form fields: Name (signup), Email, Password
+- Auto-redirect to dashboard on success
+
+#### 2. Dashboard (`/dashboard`)
+- **Sidebar**: Navigation links (Dashboard, Products, Customers, Orders, Logout)
+- **Header**: Welcome message, user avatar placeholder
+- **Stats Cards**: Total Products, Total Customers, Total Orders, Revenue
+- **Recent Orders Table**: Last 5 orders
+- **Quick Action Buttons**: Add Product, Add Customer, New Order
+
+#### 3. Products Page (`/products`)
+- **Data Table**: Name, SKU, Category, Price, Quantity, Actions (Edit/Delete)
+- **Search bar** + **Add Product button**
+- **Modal**: Add/Edit product form
+- **Delete confirmation** dialog
+
+#### 4. Customers Page (`/customers`)
+- **Data Table**: Name, Email, Phone, City, Actions (Edit/Delete)
+- **Search bar** + **Add Customer button**
+- **Modal**: Add/Edit customer form
+- **Delete confirmation** dialog
+
+#### 5. Orders Page (`/orders`)
+- **Data Table**: Order #, Customer, Product, Qty, Total, Status, Actions
+- **Search bar** + **New Order button**
+- **Modal**: Create/Edit order (dropdowns for customer & product)
+- **Status badge** (color-coded: green/yellow/red)
+
+---
+
+## Proposed Changes
+
+### Backend Setup
+
+#### [NEW] [backend/](file:///e:/allen-task2/backend/)
+Initialize NestJS project using `npx @nestjs/cli new backend`.
+
+#### [NEW] [user.entity.ts](file:///e:/allen-task2/backend/src/entities/user.entity.ts)
+TypeORM entity for users table.
+
+#### [NEW] [product.entity.ts](file:///e:/allen-task2/backend/src/entities/product.entity.ts)
+TypeORM entity for products table.
+
+#### [NEW] [customer.entity.ts](file:///e:/allen-task2/backend/src/entities/customer.entity.ts)
+TypeORM entity for customers table.
+
+#### [NEW] [order.entity.ts](file:///e:/allen-task2/backend/src/entities/order.entity.ts)
+TypeORM entity for orders table with relations to customer and product.
+
+#### [NEW] Auth module files
+`auth.module.ts`, `auth.controller.ts`, `auth.service.ts` — Simple login/signup without JWT.
+
+#### [NEW] Products module files
+`products.module.ts`, `products.controller.ts`, `products.service.ts` — Full CRUD.
+
+#### [NEW] Customers module files
+`customers.module.ts`, `customers.controller.ts`, `customers.service.ts` — Full CRUD.
+
+#### [NEW] Orders module files
+`orders.module.ts`, `orders.controller.ts`, `orders.service.ts` — Full CRUD with relations.
+
+#### [NEW] [seed.service.ts](file:///e:/allen-task2/backend/src/seed/seed.service.ts)
+Populates DB with sample users, products, customers, and orders.
+
+---
+
+### Frontend Setup
+
+#### [NEW] [frontend/](file:///e:/allen-task2/frontend/)
+Initialize Next.js project using `npx create-next-app frontend`.
+
+#### [NEW] Login Page
+`app/login/page.tsx` — Single page with Login/Signup tabs.
+
+#### [NEW] Dashboard Layout
+`app/dashboard/layout.tsx` — Sidebar + Header layout.
+`app/dashboard/page.tsx` — Stats cards + recent orders.
+
+#### [NEW] Products Page
+`app/dashboard/products/page.tsx` — CRUD table with modals.
+
+#### [NEW] Customers Page
+`app/dashboard/customers/page.tsx` — CRUD table with modals.
+
+#### [NEW] Orders Page
+`app/dashboard/orders/page.tsx` — CRUD table with modals.
+
+#### [NEW] Shared Components
+`components/Sidebar.tsx`, `components/Modal.tsx`, `components/DataTable.tsx`, `components/StatsCard.tsx`, `components/DeleteConfirm.tsx`
+
+#### [NEW] API Service
+`lib/api.ts` — Centralized API calls to backend.
+
+#### [NEW] Global Styles
+`app/globals.css` — Dark theme, glassmorphism, animations, responsive design.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+1. **Backend API Testing**: After starting the backend (`cd e:\allen-task2\backend && npm run start:dev`), test each endpoint with curl/browser:
+   - `POST /api/auth/signup` with body `{"name":"Test","email":"test@test.com","password":"123456"}`
+   - `POST /api/auth/login` with body `{"email":"test@test.com","password":"123456"}`  
+   - `GET /api/products`, `POST /api/products`, `PATCH /api/products/1`, `DELETE /api/products/1`
+   - Same for customers and orders
+   - `GET /api/seed` to verify seeding works
+
+2. **Frontend Build Check**: Run `cd e:\allen-task2\frontend && npm run build` — should compile without errors.
+
+### Browser Testing
+3. **Full E2E Flow in Browser** (after starting both servers):
+   - Open `http://localhost:3000/login` → Signup → Login → Verify redirect to dashboard
+   - Check dashboard stats cards show correct counts
+   - Navigate to Products → Add, Edit, Delete a product
+   - Navigate to Customers → Add, Edit, Delete a customer
+   - Navigate to Orders → Create, Edit, Delete an order
+   - Test sidebar navigation and logout
+   - Resize browser to verify responsive design (mobile & tablet)
+
+### Manual Verification
+4. **User Manual Testing**: After implementation, you can test the full flow by:
+   - Run `cd e:\allen-task2\backend && npm run start:dev` (backend on port 3001)
+   - Run `cd e:\allen-task2\frontend && npm run dev` (frontend on port 3000)
+   - Open `http://localhost:3000` in browser and test all CRUD operations
