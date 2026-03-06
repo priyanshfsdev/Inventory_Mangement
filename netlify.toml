@@ -13,7 +13,7 @@
   command = "npm install && npm run build"
   
   # Next.js output directory (handled by @netlify/plugin-nextjs)
-  publish = "frontend/.next"
+  publish = ".next"
 
 # ===================================================
 # Environment Variables (set these in Netlify Dashboard)
